@@ -2,29 +2,29 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 
-// =====================
-// ĐĂNG KÝ
-// =====================
+// === ĐĂNG KÝ ===
 router.post("/register", (req, res) => {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
 
-    // 1. CHECK TRÙNG USERNAME
-    const checkSql = "SELECT * FROM users WHERE username = ?";
-    db.query(checkSql, [username], (err, result) => {
+    // CHECK EMAIL
+    const checkSql = "SELECT * FROM users WHERE email = ?";
+
+    db.query(checkSql, [email], (err, result) => {
         if (err) {
             return res.status(500).json({ message: "Lỗi server" });
         }
 
-        // 👉 Nếu đã tồn tại
+        //email đã tồn tại
         if (result.length > 0) {
-            return res.json({ message: "Tên đăng nhập đã tồn tại!" });
+            return res.json({ message: "Email đã tồn tại!" });
         }
 
-        // 2. CHƯA TỒN TẠI → INSERT
-        const insertSql = "INSERT INTO users (username, password) VALUES (?, ?)";
-        db.query(insertSql, [username, password], (err, result) => {
+        //insert user
+        const insertSql = "INSERT INTO users (username,email, password) VALUES (?, ?, ?)";
+
+        db.query(insertSql, [username, email, password], (err, result) => {
             if (err) {
-                return res.status(500).json({ message: "Lỗi khi đăng ký" });
+                return res.status(500).json ({ message: "Lỗi đăng ký" });
             }
 
             res.json({ message: "Đăng ký thành công" });
@@ -32,23 +32,21 @@ router.post("/register", (req, res) => {
     });
 });
 
-// ================= LOGIN =================
+// === ĐĂNG NHẬP ===
 router.post("/login", (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-    db.query(sql, [username, password], (err, result) => {
+    const sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+
+    db.query(sql, [email, password], (err, result) => {
         if (err) {
             return res.status(500).json({ message: "Lỗi server" });
         }
 
         if (result.length > 0) {
-            res.json({
-                message: "Đăng nhập thành công",
-                user: result[0]
-            });
+            res.json({ message: "Đăng nhập thành công", user: result[0] });
         } else {
-            res.json({ message: "Sai tài khoản hoặc mật khẩu" });
+            res.json({ message: "Sai email hoặc mật khẩu" });
         }
     });
 });
