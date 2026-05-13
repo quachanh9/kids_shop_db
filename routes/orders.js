@@ -21,11 +21,12 @@ router.post("/", (req, res) => {
             orderId,
             item.product_id,
             item.quantity,
-            item.price
+            item.price, 
+            item.size
         ]);
 
         // Insert đầy đủ dữ liệu
-        db.query("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?", [values], (err2) => {
+        db.query("INSERT INTO order_items (order_id, product_id, quantity, price, size) VALUES ?", [values], (err2) => {
             if (err) return res.status(500).json(err2);
             res.json({ message: "Đặt hàng thành công" });
         });
@@ -46,6 +47,39 @@ router.get("/", (req, res) => {
         res.json(result);
     });
 });
+
+//Lịch sử đơn hàng theo user
+router.get("/user/:user_id", (req,res) => {
+    const userId = req.params.user_id;
+    const sql = `
+        SELECT
+            o.id AS order_id,
+            o.total_price,
+            o.address,
+            o.phone,
+            o.created_at,
+            o.status,
+            oi.quantity,
+            oi.price,
+            p.name,
+            p.image
+        FROM orders o
+        JOIN order_items oi 
+            ON o.id = oi.order_id
+        JOIN products p
+            ON p.id = oi.product_id
+        WHERE o.user_id = ?
+        ORDER BY o.id DESC
+    `;
+
+    db.query(sql, [userId], (err, result) => {
+        if (err) {
+            return res.status(500).json(err);
+        }
+        res.json(result);
+    });
+});
+
 
 router.get("/:id/items", (req, res) => {
     const ordertId = req.params.id;
@@ -84,5 +118,6 @@ router.put("/:id/status", (req, res) => {
         res.json({ message: "Cập nhật trạng thái đơn hàng thành công" });
     });
 });
+
 
 module.exports = router;

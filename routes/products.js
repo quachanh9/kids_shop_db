@@ -29,7 +29,7 @@ const upload = multer({ storage });
 // GET ALL PRODUCTS
 // ======================
 router.get("/", (req, res) => {
-    db.query("SELECT * FROM products", (err, result) => {
+    db.query("SELECT id, name, price, stock, image, description, category,  sizes FROM products", (err, result) => {
         if (err) return res.status(500).send(err);
         res.json(result);
     });
@@ -40,7 +40,7 @@ router.get("/", (req, res) => {
 // ======================
 router.post("/", upload.single("image"), (req, res) => {
     try {
-        const { name, price, stock, description } = req.body;
+        const { name, price, stock, description, category, sizes } = req.body;
 
         // 🔥 bắt buộc có ảnh
         if (!req.file) {
@@ -51,11 +51,11 @@ router.post("/", upload.single("image"), (req, res) => {
         const image = req.file.filename;
 
         const sql = `
-            INSERT INTO products (name, price, stock, image, description)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO products (name, price, stock, image, description, category, sizes)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
-        db.query(sql, [name, price, stock, image, description], (err) => {
+        db.query(sql, [name, price, stock, image, description, category, sizes], (err) => {
             if (err) {
                 console.log("SQL ERROR:", err);
                 return res.status(500).json({ message: "Lỗi DB" });
@@ -83,7 +83,7 @@ router.delete("/:id", (req, res) => {
 // UPDATE PRODUCT
 router.put("/:id", upload.single("image"), (req, res) => {
     const id = req.params.id;
-    const { name, price, stock, description } = req.body;
+    const { name, price, stock, description, category, sizes } = req.body;
 
     let image = null;
 
@@ -94,12 +94,12 @@ router.put("/:id", upload.single("image"), (req, res) => {
 
     let sql = `
         UPDATE products 
-        SET name=?, price=?, stock=?, description=? 
+        SET name=?, price=?, stock=?, description=?, category=?, sizes=? 
         ${image ? ", image=?" : ""}
         WHERE id=?
     `;
 
-    let params = [name, price, stock, description];
+    let params = [name, price, stock, description, category, sizes];
 
     if (image) params.push(image);
     params.push(id);
