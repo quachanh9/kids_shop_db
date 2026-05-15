@@ -1,6 +1,33 @@
 const router = require("express").Router();
 const db = require("../config/db");
 
+// GET ALL ORDERS
+router.get("/", (req, res) => {
+
+    const sql = `
+        SELECT 
+            o.*,
+            u.username AS name
+        FROM orders o
+
+        LEFT JOIN users u
+            ON o.user_id = u.id
+
+        ORDER BY o.id DESC
+    `;
+
+    db.query(sql, (err, result) => {
+
+        if (err) {
+            return res.status(500).json(err);
+        }
+
+        res.json(result);
+
+    });
+
+});
+
 // CREATE ORDER
 router.post("/", (req, res) => {
     const { user_id, name, phone, address, cart } = req.body;
@@ -26,25 +53,10 @@ router.post("/", (req, res) => {
         ]);
 
         // Insert đầy đủ dữ liệu
-        db.query("INSERT INTO order_items (order_id, product_id, quantity, price, size) VALUES ?", [values], (err2) => {
+        db.query("INSERT INTO order_items (order_id, product_id, quantity, price, sizes) VALUES ?", [values], (err2) => {
             if (err) return res.status(500).json(err2);
             res.json({ message: "Đặt hàng thành công" });
         });
-    });
-});
-
-
-router.get("/", (req, res) => {
-    const sql = `
-        SELECT o.*, u.username AS name
-        FROM orders o 
-        LEFT JOIN users u ON o.user_id = u.id 
-        ORDER BY o.id DESC
-    `;
-
-    db.query(sql, (err, result) => {
-        if (err) return res.status(500).json(err);
-        res.json(result);
     });
 });
 
@@ -61,6 +73,7 @@ router.get("/user/:user_id", (req,res) => {
             o.status,
             oi.quantity,
             oi.price,
+            oi.sizes,
             p.name,
             p.image
         FROM orders o
