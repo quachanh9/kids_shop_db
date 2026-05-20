@@ -30,7 +30,7 @@ router.get("/", (req, res) => {
 
 // CREATE ORDER
 router.post("/", (req, res) => {
-    const { user_id, name, phone, address, cart } = req.body;
+    const { user_id, customer_name, phone, address, payment_method, payment_status, cart } = req.body;
 
     let total = 0;
     cart.forEach(item => {
@@ -38,7 +38,7 @@ router.post("/", (req, res) => {
     });
 
     //Tạo order
-    db.query("INSERT INTO orders (user_id, total_price, address, phone) VALUES (?, ?, ?, ?)", [user_id, total, address, phone], (err, result) => {
+    db.query("INSERT INTO orders (user_id, customer_name, total_price, address, phone, payment_method, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?)", [user_id, customer_name, total, address, phone, payment_method, payment_status], (err, result) => {
         if (err) return res.status(500).json(err);
 
         const orderId = result.insertId;
@@ -69,6 +69,9 @@ router.get("/user/:user_id", (req,res) => {
             o.total_price,
             o.address,
             o.phone,
+            o.customer_name,
+            o.payment_method,
+            o.payment_status,
             o.created_at,
             o.status,
             oi.quantity,

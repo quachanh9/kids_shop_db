@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require("../config/db");
 
 router.get("/", (req, res) => {
+    const month = req.query.month;
+    const year = req.query.year;
     const result = {};
 
     // ✅ CHART (không JOIN)
@@ -11,9 +13,11 @@ router.get("/", (req, res) => {
             DATE(created_at) AS date, 
             SUM(total_price) AS revenue
         FROM orders
+        WHERE MONTH(created_at)=? 
+        AND YEAR(created_at)=?
         GROUP BY DATE(created_at)
         ORDER BY date ASC
-    `, (err, revenueData) => {
+    `, [month, year], (err, revenueData) => {
         if (err) return res.status(500).json(err);
 
         // ✅ lấy quantity riêng
@@ -23,8 +27,10 @@ router.get("/", (req, res) => {
                 SUM(oi.quantity) AS total_quantity
             FROM orders o
             JOIN order_items oi ON o.id = oi.order_id
+            WHERE MONTH(o.created_at)=?
+            AND YEAR(o.created_at)=?
             GROUP BY DATE(o.created_at)
-        `, (err, quantityData) => {
+        `,  [month, year], (err, quantityData) => {
             if (err) return res.status(500).json(err);
 
             // 👉 merge 2 dữ liệu
